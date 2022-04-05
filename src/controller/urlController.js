@@ -22,10 +22,13 @@ const posturl = async function (req, res) {
         }
         if(! re.test(longUrl)){return res.status(400).send({Status:false , msg:"Please provide a valid url"})}
 
-    urlCode= nanoid()
+        let dupliUrl = await urlModel.findOne({longUrl:longUrl})
+        if(dupliUrl){return res.status(200).send({Status:true , msg:dupliUrl})}
+   
+        const urlCode = nanoid() //unique
         console.log(urlCode)
 
-        shortUrl = 'localhost:3000/' + urlCode
+        shortUrl = 'localhost:3000/' + urlCode.toLowerCase()
         data = {longUrl:longUrl , shortUrl:shortUrl, urlCode:urlCode}
 
         let urlData = await urlModel.create(data)
@@ -52,9 +55,9 @@ const redUrl = async function(req,res){
         let urlCode = req.params.urlCode
         let correctUrlcode = await urlModel.findOne({urlCode:urlCode})
         if(!correctUrlcode){
-            return res.status(404).send({Status:true, msg:"URL not found. Please enter correct url code"})}
+            return res.status(404).send({Status:false, msg:"URL not found. Please enter correct url code"})}
 
-            return res.status(302).redirect(correctUrlcode.longUrl)
+            return res.status(302).send({Status :"redirection successful"}).redirect( correctUrlcode.longUrl)
 
 
 
