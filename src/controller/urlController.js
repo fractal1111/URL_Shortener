@@ -1,26 +1,17 @@
-const urlModel = require("../models/url")
-const  { nanoid } = require('nanoid')
-const redis = require('redis')
+const urlModel = require("../models/url");
+const redis = require('redis');
+const validUrl = require('valid-url');
 const { promisify } = require("util");
+const  { nanoid } = require('nanoid');
 
-const validUrl = require('valid-url')
 const isvalid = function(value) {
     if (typeof value == undefined || typeof value == null) { return false }
     if (typeof value == 'string' && value.trim().length == 0) { return false }
     return true
 
 }
-
-
-
-
-
-
-  
-  
-  
   //1. connect to the server
-  //Connect to REDIS
+  
 const redisClient = redis.createClient(
     19886,
     "redis-19886.c212.ap-south-1-1.ec2.cloud.redislabs.com",
@@ -43,14 +34,6 @@ const redisClient = redis.createClient(
   const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
   
 
-
-
-
-
-
-
-
-
 const posturl = async function (req, res) {
 
 
@@ -58,14 +41,15 @@ const posturl = async function (req, res) {
         if(Object.keys(req.body).length==0){
             return res.status(400).send({Status:false , msg:"Provide input"})}
         
-            let longUrl = req.body.url
+            let longUrl = req.body.longUrl
+         
 
             
            
         if (! isvalid(longUrl) ) {
-            return res.status(400).send({ Status: false, ERROR: "Please provide a url field and enter url" })
+            return res.status(400).send({ Status: false, msg: "Please provide a url field and enter url" })
         }
-       
+      
         if(! validUrl.isWebUri(longUrl)){
             return res.status(400).send({Status:false , msg:"Please provide a valid url"})}
         
@@ -74,15 +58,16 @@ const posturl = async function (req, res) {
 
         let cachedUrlData = await GET_ASYNC(redirectionUrl)
         console.log(cachedUrlData)
-        if(cachedUrlData){return res.status(200).send({Status:true , Data: JSON.parse(cachedUrlData)})}
+        if(cachedUrlData){return res.status(200).send({Status:true , data: JSON.parse(cachedUrlData)})}
         // let dupliUrl = await urlModel.findOne({longUrl:longUrl})
         // if(dupliUrl){return res.status(200).send({Status:true , msg:dupliUrl})}
    
-        let urlCode = nanoid(5) //unique
+       
+        let urlCode = nanoid(8) //unique
         let short = urlCode.toLowerCase()
         
 
-        shortUrl = 'localhost:3000/' + urlCode.toLowerCase()
+        shortUrl = 'localhost:3000/' + short
         data = {longUrl:redirectionUrl , shortUrl:shortUrl, urlCode:short}
 
         let urlData = await urlModel.create(data)
@@ -90,11 +75,11 @@ const posturl = async function (req, res) {
         
         await SET_ASYNC(short,redirectionUrl) 
         
-        await SET_ASYNC(redirectionUrl,JSON.stringify(urlData),"EX",60*60)  //to set expiry of cache
+        await SET_ASYNC(redirectionUrl,JSON.stringify(urlData))  //to set expiry of cache (,"EX",60*60)
        
        
 
-        return res.status(201).send({Status:true , msg:urlData})
+        return res.status(201).send({Status:true , data:urlData})
 
         
 
@@ -103,7 +88,7 @@ const posturl = async function (req, res) {
 
 
     } catch (err) {
-        return res.status(500).send({ Status: false, ERROR: err.message })
+        return res.status(500).send({ Status: false, msg: err.message })
     }
 
 
@@ -115,6 +100,7 @@ const posturl = async function (req, res) {
 const redUrl = async function(req,res){
     try{
         let urlCode = req.params.urlCode.toLowerCase().trim()
+        console.log(urlCode)
      
         let cahcedLongUrl = await GET_ASYNC(urlCode)
         console.log(cahcedLongUrl)
@@ -130,7 +116,7 @@ const redUrl = async function(req,res){
         if(!correctUrlcode){
             return res.status(404).send({Status:false, msg:"URL not found. Please enter correct url code"})}
 
-            return res.status(302).redirect( correctUrlcode.longUrl )
+           // return res.status(302).redirect( correctUrlcode.longUrl )
 
 
 
@@ -138,7 +124,7 @@ const redUrl = async function(req,res){
 
     }catch(err){
 
-        return res.status(500).send({Status:false, ERROR:err.message})
+        return res.status(500).send({Status:false, msg:err.message})
     }
 
 }
