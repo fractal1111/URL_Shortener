@@ -70,6 +70,7 @@ const posturl = async function (req, res) {
 
 
         let cachedUrlData = await GET_ASYNC(redirectionUrl)
+        console.log(cachedUrlData)
         if(cachedUrlData){return res.status(200).send({Status:true , Data: JSON.parse(cachedUrlData)})}
         // let dupliUrl = await urlModel.findOne({longUrl:longUrl})
         // if(dupliUrl){return res.status(200).send({Status:true , msg:dupliUrl})}
