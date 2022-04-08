@@ -2,15 +2,15 @@ const urlModel = require("../models/url")
 const  { nanoid } = require('nanoid')
 const redis = require('redis')
 const { promisify } = require("util");
-const { join } = require("path");
 
+const validUrl = require('valid-url')
 const isvalid = function(value) {
     if (typeof value == undefined || typeof value == null) { return false }
     if (typeof value == 'string' && value.trim().length == 0) { return false }
     return true
 
 }
-const re = /(http|ftp|https):\/\/[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:\/~+#-]*[\w@?^=%&amp;\/~+#-])?/
+
 
 
 
@@ -65,9 +65,11 @@ const posturl = async function (req, res) {
         if (! isvalid(longUrl) ) {
             return res.status(400).send({ Status: false, ERROR: "Please provide a url field and enter url" })
         }
-        if(! re.test(longUrl)){
+       
+        if(! validUrl.isWebUri(longUrl)){
             return res.status(400).send({Status:false , msg:"Please provide a valid url"})}
-        let redirectionUrl = longUrl.trim()
+        
+            let redirectionUrl = longUrl.trim()
 
 
         let cachedUrlData = await GET_ASYNC(redirectionUrl)
