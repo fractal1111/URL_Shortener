@@ -65,7 +65,8 @@ const posturl = async function (req, res) {
         if (! isvalid(longUrl) ) {
             return res.status(400).send({ Status: false, ERROR: "Please provide a url field and enter url" })
         }
-        if(! re.test(longUrl)){return res.status(400).send({Status:false , msg:"Please provide a valid url"})}
+        if(! re.test(longUrl)){
+            return res.status(400).send({Status:false , msg:"Please provide a valid url"})}
         let redirectionUrl = longUrl.trim()
 
 
@@ -87,7 +88,7 @@ const posturl = async function (req, res) {
         
         await SET_ASYNC(short,redirectionUrl) 
         
-        await SET_ASYNC(redirectionUrl,JSON.stringify(urlData),"EX",30)  //to set expiry of cache
+        await SET_ASYNC(redirectionUrl,JSON.stringify(urlData),"EX",60*60)  //to set expiry of cache
        
        
 
